@@ -11,7 +11,7 @@ namespace image_proc
     {
         protected abstract Color CalculateNewPixelColor(Bitmap SourceImage, int x, int y);
         
-        public Bitmap processImage(Bitmap SourceImage, BackgroundWorker worker)
+        public virtual Bitmap processImage(Bitmap SourceImage, BackgroundWorker worker)
         {
             Bitmap resultImage = new Bitmap(SourceImage.Width, SourceImage.Height);
             for (int i = 0; i < SourceImage.Width; i++)
@@ -105,6 +105,103 @@ namespace image_proc
             Color SourceColor = SourceImage.GetPixel(Clamp(x + (int)((rnd.NextDouble() - 0.5) * 10), 0, SourceImage.Width - 1), Clamp(y + (int)((rnd.NextDouble() - 0.5) * 10), 0, SourceImage.Height - 1));
             Color resultColor = Color.FromArgb(Clamp(SourceColor.R, 0, 255), Clamp(SourceColor.G, 0, 255), Clamp(SourceColor.B, 0, 255));
             return resultColor;
+        }
+    }
+
+    class GrayWorldFilter : Filters
+    {
+        public override Bitmap processImage(Bitmap SourceImage, BackgroundWorker worker)
+        {
+            Bitmap resultImage = new Bitmap(SourceImage.Width, SourceImage.Height);
+            UInt64 R_ = 0;
+            UInt64 G_ = 0;
+            UInt64 B_ = 0;
+            int ARGB = 0;
+            Color color;
+            for (int i = 0; i < SourceImage.Width; i++)
+            {
+                for (int j = 0; j < SourceImage.Height; j++)
+                {
+                    color = SourceImage.GetPixel(i, j);
+                    R_ += color.R;
+                    G_ += color.G;
+                    B_ += color.B;
+                }
+            }
+            UInt64 size = (UInt64)(SourceImage.Width * SourceImage.Height);
+            R_ = R_ / size;
+            G_ = G_ / size;
+            B_ = B_ / size;
+            ARGB = (int)(R_ + G_ + B_) / 3;
+            for (int i = 0; i < SourceImage.Width; i++)
+            {
+                worker.ReportProgress((int)((float)i / resultImage.Width * 100));
+                if (worker.CancellationPending)
+                {
+                    return null;
+                }
+                for (int j = 0; j < SourceImage.Height; j++)
+                {
+                    color = Color.FromArgb(Clamp(SourceImage.GetPixel(i, j).R * ARGB / (int)R_, 0, 255), Clamp(SourceImage.GetPixel(i, j).G * ARGB / (int)G_, 0, 255), Clamp(SourceImage.GetPixel(i, j).B * ARGB / (int)B_, 0, 255));
+                    resultImage.SetPixel(i, j, color);
+                }
+            }
+            return resultImage;
+        }
+
+        protected override Color CalculateNewPixelColor(Bitmap SourceImage, int x, int y)
+        {
+            Color res = Color.FromArgb(255, 255, 255);
+            return res;
+        }
+    }
+
+    class ContrastFilter : Filters
+    {
+        public override Bitmap processImage(Bitmap SourceImage, BackgroundWorker worker)
+        {
+            Bitmap resultImage = new Bitmap(SourceImage.Width, SourceImage.Height);
+            int max = 0;
+            int min = 255;
+            Color color;
+            int intense;
+            for (int i = 0; i < SourceImage.Width; i++)
+            {
+                for (int j = 0; j < SourceImage.Height; j++)
+                {
+                    color = SourceImage.GetPixel(i, j);
+                    intense = (int)(0.299 * color.R + 0.587 * color.G + 0.114 * color.B);
+                    if (max < intense)
+                    {
+                        max = intense;
+                    }
+                    if (min > intense)
+                    {
+                        min = intense;
+                    }
+                }
+            }
+            
+            for (int i = 0; i < SourceImage.Width; i++)
+            {
+                worker.ReportProgress((int)((float)i / resultImage.Width * 100));
+                if (worker.CancellationPending)
+                {
+                    return null;
+                }
+                for (int j = 0; j < SourceImage.Height; j++)
+                {
+                    color = Color.FromArgb(Clamp((SourceImage.GetPixel(i, j).R - min) * 255 / (max - min), 0, 255), Clamp((SourceImage.GetPixel(i, j).G - min) * 255 / (max - min), 0, 255), Clamp((SourceImage.GetPixel(i, j).B - min) * 255 / (max - min), 0, 255));
+                    resultImage.SetPixel(i, j, color);
+                }
+            }
+            return resultImage;
+        }
+
+        protected override Color CalculateNewPixelColor(Bitmap SourceImage, int x, int y)
+        {
+            Color res = Color.FromArgb(255, 255, 255);
+            return res;
         }
     }
 
@@ -325,6 +422,120 @@ namespace image_proc
             Array.Sort(colorG);
             Array.Sort(colorB);
             return Color.FromArgb(colorR[24], colorG[24], colorB[24]);
+        }
+    }
+
+    class Dilation : MatrixFilters
+    {
+        public Dilation(float[,] ker)
+        {
+            kernel = ker;
+        }
+
+        public override Bitmap processImage(Bitmap SourceImage, BackgroundWorker worker)
+        {
+            Bitmap resultImage = new Bitmap(SourceImage.Width, SourceImage.Height);
+            for (int i = kernel.GetLength(0) / 2; i < SourceImage.Width - (kernel.GetLength(0) / 2); i++)
+            {
+                worker.ReportProgress((int)((float)i / resultImage.Width * 100));
+                if (worker.CancellationPending)
+                {
+                    return null;
+                }
+                for (int j = kernel.GetLength(1) / 2; j < SourceImage.Height - (kernel.GetLength(1) / 2); j++)
+                {
+                    resultImage.SetPixel(i, j, CalculateNewPixelColor(SourceImage, i, j));
+                }
+            }
+            return resultImage;
+        }
+
+        protected override Color CalculateNewPixelColor(Bitmap SourceImage, int x, int y)
+        {
+            int radiusX = kernel.GetLength(0) / 2;
+            int radiusY = kernel.GetLength(1) / 2;
+            int resultR = 0;
+            int resultG = 0;
+            int resultB = 0;
+            for (int l = -radiusY; l <= radiusY; l++)
+            {
+                for (int k = -radiusX; k <= radiusX; k++)
+                {
+                    int idX = Clamp(x + k, 0, SourceImage.Width - 1);
+                    int idY = Clamp(y + l, 0, SourceImage.Height - 1);
+                    Color neighborColor = SourceImage.GetPixel(idX, idY);
+                    if (neighborColor.R > resultR && (int)(kernel[radiusX + k, radiusY + l]) != 0)
+                    {
+                        resultR = neighborColor.R;
+                    }
+                    if (neighborColor.G > resultG && (int)(kernel[radiusX + k, radiusY + l]) != 0)
+                    {
+                        resultG = neighborColor.G;
+                    }
+                    if (neighborColor.B > resultB && (int)(kernel[radiusX + k, radiusY + l]) != 0)
+                    {
+                        resultB = neighborColor.B;
+                    }
+                }
+            }
+            return Color.FromArgb(Clamp((int)resultR, 0, 255), Clamp((int)resultG, 0, 255), Clamp((int)resultB, 0, 255));
+        }
+    }
+
+    class Erosion : MatrixFilters
+    {
+        public Erosion(float[,] ker)
+        {
+            kernel = ker;
+        }
+
+        public override Bitmap processImage(Bitmap SourceImage, BackgroundWorker worker)
+        {
+            Bitmap resultImage = new Bitmap(SourceImage.Width, SourceImage.Height);
+            for (int i = kernel.GetLength(0) / 2; i < SourceImage.Width - (kernel.GetLength(0) / 2); i++)
+            {
+                worker.ReportProgress((int)((float)i / resultImage.Width * 100));
+                if (worker.CancellationPending)
+                {
+                    return null;
+                }
+                for (int j = kernel.GetLength(1) / 2; j < SourceImage.Height - (kernel.GetLength(1) / 2); j++)
+                {
+                    resultImage.SetPixel(i, j, CalculateNewPixelColor(SourceImage, i, j));
+                }
+            }
+            return resultImage;
+        }
+
+        protected override Color CalculateNewPixelColor(Bitmap SourceImage, int x, int y)
+        {
+            int radiusX = kernel.GetLength(0) / 2;
+            int radiusY = kernel.GetLength(1) / 2;
+            int resultR = 255;
+            int resultG = 255;
+            int resultB = 255;
+            for (int l = -radiusY; l <= radiusY; l++)
+            {
+                for (int k = -radiusX; k <= radiusX; k++)
+                {
+                    int idX = Clamp(x + k, 0, SourceImage.Width - 1);
+                    int idY = Clamp(y + l, 0, SourceImage.Height - 1);
+                    Color neighborColor = SourceImage.GetPixel(idX, idY);
+                    if (neighborColor.R < resultR && (int)(kernel[radiusX + k, radiusY + l]) != 0)
+                    {
+                        resultR = neighborColor.R;
+                    }
+                    if (neighborColor.G < resultG && (int)(kernel[radiusX + k, radiusY + l]) != 0)
+                    {
+                        resultG = neighborColor.G;
+                    }
+                    if (neighborColor.B < resultB && (int)(kernel[radiusX + k, radiusY + l]) != 0)
+                    {
+                        resultB = neighborColor.B;
+                    }
+                }
+            }
+            return Color.FromArgb(Clamp((int)resultR, 0, 255), Clamp((int)resultG, 0, 255), Clamp((int)resultB, 0, 255));
         }
     }
 

@@ -1,8 +1,8 @@
-c:\users\hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\bin\Debug\image_proc.exe
-c:\users\hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\bin\Debug\image_proc.pdb
-c:\users\hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.csprojResolveAssemblyReference.cache
-c:\users\hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.Form1.resources
-c:\users\hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.Properties.Resources.resources
-c:\users\hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.csproj.GenerateResource.Cache
-c:\users\hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.exe
-c:\users\hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.pdb
+C:\Users\Hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\bin\Debug\image_proc.exe
+C:\Users\Hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\bin\Debug\image_proc.pdb
+C:\Users\Hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.Form1.resources
+C:\Users\Hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.Properties.Resources.resources
+C:\Users\Hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.csproj.GenerateResource.Cache
+C:\Users\Hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.exe
+C:\Users\Hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.pdb
+C:\Users\Hrewhwreh\documents\visual studio 2012\Projects\image_proc\image_proc\obj\Debug\image_proc.csprojResolveAssemblyReference.cache
